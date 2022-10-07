@@ -41,7 +41,20 @@ Special thanks to 3dregenerator for the <a href = "http://tf3dm.com/3d-model/air
 <h1>Animation Menu</h1>
 
 <table>
+
+    <tr><td colspan="7">
+    
+        <input type="radio" id="regularslerp" name="slerpType" value="regularslerp">
+        <label for="regularslerp">Regular SLERP</label><BR>
+        <input type="radio" id="dirtyslerp" name="slerpType" value="dirtyslerp">
+        <label for="dirtyslerp">Dirty SLERP</label>
+    
+        <BR><BR><BR>
+
 <tr><td colspan = "7">Orientation 1<BR></td></tr>
+
+
+</td></tr>
 <tr><td>Axis: (</td><td><input type="text" id="axis1x" size="1"></input></td><td>,</td><td><input type="text" id="axis1y" size="1"></input></td><td>,</td><td><input type="text" id="axis1z" size="1"></input></td><td>)</td></tr>
 <tr><td>Angle:</td><td colspan = "5"><input type="text" id="angle1" size="1"></input> degrees</td></tr>
 </table><BR>
@@ -61,6 +74,9 @@ Special thanks to 3dregenerator for the <a href = "http://tf3dm.com/3d-model/air
 	QuaternionCanvas(glcanvas);//Add fields to glcanvas that help with rendering
 	glcanvas.mesh.loadFile("Airbusa380.off");
 	glcanvas.centerCamera();
+    let regularslerp = document.getElementById("regularslerp");
+    regularslerp.checked = true;
+    let dirtyslerp = document.getElementById("dirtyslerp");
     
     var axis1xtxt = document.getElementById('axis1x');
     var axis1ytxt = document.getElementById('axis1y');
@@ -71,6 +87,15 @@ Special thanks to 3dregenerator for the <a href = "http://tf3dm.com/3d-model/air
     var axis2ztxt = document.getElementById('axis2z');
     var angle2txt = document.getElementById('angle2');
     
+    function dirtySlerp(qslerp, q1, q2, t) {
+        let qa = quat.create();
+        quat.scale(qa, q1, (1-t));
+        let qb = quat.create();
+        quat.scale(qb, q2, t);
+        quat.add(qslerp, qa, qb);
+        quat.normalize(qslerp, qslerp);
+    }
+
     function doInterpAnimationStep() {
         var currTime = (new Date()).getTime();
         var dT = (currTime - startTime) / 1000.0;
@@ -79,8 +104,13 @@ Special thanks to 3dregenerator for the <a href = "http://tf3dm.com/3d-model/air
             return;
         }
         dT = dT/totalTime;
-        
-        quat.slerp(qslerp, q1, q2, dT);
+        if (regularslerp.checked) {
+            quat.slerp(qslerp, q1, q2, dT);
+        }
+        else {
+            dirtySlerp(qslerp, q1, q2, dT);
+        }
+
         glcanvas.repaint();
         
         requestAnimFrame(doInterpAnimationStep);
